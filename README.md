@@ -11,3 +11,6 @@ The executable requires the system folder that contains the images used by this 
 Additionaly, you can add new columns by click on "Add new column" and edit them by using
 the options found at the bottom of each column. You can also edit each individual component
 by right clicking it and you can select a component using the middle mouse button.
+
+# Dependencies
+This project needs the DirectX 9 SDK required by the ImGui library.
