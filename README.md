@@ -6,7 +6,7 @@ Basic data viewer that uses columns to display data.
 This project uses the ImGui library:
 https://github.com/ocornut/imgui
 
-How to use:
+# How to use
 The executable requires the system folder that contains the images used by this software.
 Additionaly, you can add new columns by click on "Add new column" and edit them by using
 the options found at the bottom of each column. You can also edit each individual component
