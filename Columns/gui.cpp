@@ -500,8 +500,6 @@ void gui::draw_top_barmenu()
     static bool options_open = false;
     static int current_settings_tab = 0;
 
-
-
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10.f, 10.f));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10.f, 10.f));
 
@@ -650,62 +648,54 @@ void gui::draw_top_barmenu()
     ImGui::PopStyleVar();
 }
 
-void gui::draw_gui()
+void gui::load_arrows()
 {
-    if (!down_arrow_txt)
+    if (!down_arrow_txt  && !up_arrow_txt 
+     && !left_arrow_txt  && !right_arrow_txt)
     {
-        std::string arrow_down = utils::get_current_directory("system\\down_arrow.png");
-
         PDIRECT3DTEXTURE9 tmp_txt = NULL;
         int w_tmp, h_tmp;
 
-        utils::load_texture_file(arrow_down.c_str(), &tmp_txt, &w_tmp, &h_tmp);
+        utils::load_texture_file(
+            utils::get_current_directory("system\\down_arrow.png").c_str(),
+            &tmp_txt, &w_tmp, &h_tmp);
 
         down_arrow_txt = tmp_txt;
-    }
 
-    if (!up_arrow_txt)
-    {
-        std::string arrow_down = utils::get_current_directory("system\\up_arrow.png");
-
-        PDIRECT3DTEXTURE9 tmp_txt = NULL;
-        int w_tmp, h_tmp;
-
-        utils::load_texture_file(arrow_down.c_str(), &tmp_txt, &w_tmp, &h_tmp);
+        utils::load_texture_file(
+            utils::get_current_directory("system\\up_arrow.png").c_str(),
+            &tmp_txt, &w_tmp, &h_tmp);
 
         up_arrow_txt = tmp_txt;
-    }
 
-    if (!left_arrow_txt)
-    {
-        std::string arrow_down = utils::get_current_directory("system\\left_arrow.png");
-
-        PDIRECT3DTEXTURE9 tmp_txt = NULL;
-        int w_tmp, h_tmp;
-
-        utils::load_texture_file(arrow_down.c_str(), &tmp_txt, &w_tmp, &h_tmp);
+        utils::load_texture_file(
+            utils::get_current_directory("system\\left_arrow.png").c_str(),
+            &tmp_txt, &w_tmp, &h_tmp);
 
         left_arrow_txt = tmp_txt;
-    }
 
-    if (!right_arrow_txt)
-    {
-        std::string arrow_down = utils::get_current_directory("system\\right_arrow.png");
-
-        PDIRECT3DTEXTURE9 tmp_txt = NULL;
-        int w_tmp, h_tmp;
-
-        utils::load_texture_file(arrow_down.c_str(), &tmp_txt, &w_tmp, &h_tmp);
+        utils::load_texture_file(
+            utils::get_current_directory("system\\right_arrow.png").c_str(),
+            &tmp_txt, &w_tmp, &h_tmp);
 
         right_arrow_txt = tmp_txt;
     }
-    bool open = true;
+}
+
+ImGuiWindowFlags w_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoResize |
+                           ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar;
+
+void gui::draw_gui()
+{
+    load_arrows();
+
     ImGui::SetNextWindowPos(ImVec2(-1, 0));
     ImGui::SetNextWindowSize(ImVec2(globals::width - 4, globals::height));
 
     globals::height_of_board = globals::height - 70;
 
-    ImGui::Begin("Main", &open, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar);
+    bool open = true;
+    ImGui::Begin("Main", &open, w_flags);
     {
         gui::draw_top_barmenu();
 
@@ -746,6 +736,7 @@ void gui::draw_gui()
                 ImGui::NextColumn();
             }
         }
+
         ImGui::EndColumns();
         ImGui::EndChild();
 

@@ -8,6 +8,7 @@
 namespace gui
 {
     extern void draw_gui();
+    extern void load_arrows();
     extern void draw_top_barmenu();
     extern void draw_column(int cc, column* column_item);
     extern void draw_project_screen();

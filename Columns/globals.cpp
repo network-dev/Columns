@@ -16,7 +16,7 @@ namespace globals
     bool intro_showed = false;
 
     std::string project_name = "";
-    std::string project_version = "1.1.4 - Update #2 - Change #4";
+    std::string project_version = "1.1.5 - Update #2 - Change #5";
     std::string project_path = "";
 
     ImFont* big_font;

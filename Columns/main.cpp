@@ -1,27 +1,32 @@
 #include "imgui.h"
+#include "imgui_stdlib.h"
 #include "imgui_impl_dx9.h"
+#include "imgui_internal.h"
 #include "imgui_impl_win32.h"
+
 #include <d3d9.h>
 #include <dinput.h>
 #include <tchar.h>
-#include <imgui_internal.h>
 #include <vector>
 #include <string>
 #include <iostream>
-#include "imgui_stdlib.h"
 #include <D3dx9tex.h>
-#include "gui.h"
-#include "globals.h"
-#include "definitions.h"
 #include <cstdio>
 #include <io.h>
-#include "save.h"
 #include <direct.h>
 #include <stdio.h>
 #include <algorithm>
+
+#include "gui.h"
+#include "save.h"
+#include "globals.h"
+#include "definitions.h"
+
 #define DIRECTINPUT_VERSION 0x0800
+
 #pragma comment(lib, "shell32.lib")
 #pragma comment(lib, "D3dx9")
+
 // Data
 static LPDIRECT3D9              g_pD3D = NULL;
 static LPDIRECT3DDEVICE9        g_pd3dDevice = NULL;
@@ -33,15 +38,65 @@ void CleanupDeviceD3D();
 void ResetDevice();
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
+void remove_rounds_and_spacing()
+{
+    ImGui::GetStyle().WindowRounding = 0.0f;
+    ImGui::GetStyle().ChildRounding = 0.0f;
+    ImGui::GetStyle().FrameRounding = 0.0f;
+    ImGui::GetStyle().GrabRounding = 0.0f;
+    ImGui::GetStyle().PopupRounding = 0.0f;
+    ImGui::GetStyle().ScrollbarRounding = 0.0f;
+
+    ImGui::GetStyle().ItemSpacing = ImVec2(0.f, 0.f);
+    ImGui::GetStyle().IndentSpacing = 0.f;
+    ImGui::GetStyle().WindowPadding = ImVec2(0.f, 0.f);
+}
+
+void load_fonts()
+{
+    if (!globals::big_font)
+    {
+        ImGui::GetIO().Fonts->AddFontDefault();
+        std::string font =
+            "C:\\USERS\\USER\\APPDATA\\LOCAL\\MICROSOFT\\WINDOWS\\FONTS\\ProggyClean.ttf";
+        globals::big_font = ImGui::GetIO().Fonts->AddFontFromFileTTF(font.c_str(), 26.0f);
+    }
+}
+
+void set_globals(HWND hwnd)
+{
+    RECT rect;
+    if (GetWindowRect(hwnd, &rect))
+    {
+        globals::width = rect.right - rect.left;
+        globals::height = rect.bottom - rect.top;
+    }
+
+    globals::g_pd3dDevice = g_pd3dDevice;
+    globals::g_pD3D = g_pD3D;
+    globals::g_d3dpp = g_d3dpp;
+}
+
+WNDCLASSEX create_wc()
+{
+    return { sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, _T("Columns Window"), NULL };
+}
+
+HWND create_window(WNDCLASSEX wc)
+{
+    return ::CreateWindow(wc.lpszClassName,
+        utils::convert_char_array_to_wchar(std::string("Columns " + globals::project_version).c_str()),
+        WS_OVERLAPPEDWINDOW, 100, 100, 1280, 800, NULL, NULL, wc.hInstance, NULL);
+}
+
 // Main code
 int main(int, char**)
 {
-    std::string title_name = "Columns " + globals::project_version;
-
-    //ImGui_ImplWin32_EnableDpiAwareness();
-    WNDCLASSEX wc = { sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, _T("Columns Window"), NULL };
+    WNDCLASSEX wc = create_wc();
+    
     ::RegisterClassEx(&wc);
-    HWND hwnd = ::CreateWindow(wc.lpszClassName, utils::convert_char_array_to_wchar(title_name.c_str()), WS_OVERLAPPEDWINDOW, 100, 100, 1280, 800, NULL, NULL, wc.hInstance, NULL);
+    
+    HWND hwnd = create_window(wc);
 
     // Initialize Direct3D
     if (!CreateDeviceD3D(hwnd))
@@ -62,28 +117,16 @@ int main(int, char**)
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
-    //ImGui::StyleColorsClassic();
-
+    
     // Setup Platform/Renderer bindings
     ImGui_ImplWin32_Init(hwnd);
     ImGui_ImplDX9_Init(g_pd3dDevice);
 
-    ImGui::GetStyle().WindowRounding = 0.0f;
-    ImGui::GetStyle().ChildRounding = 0.0f;
-    ImGui::GetStyle().FrameRounding = 0.0f;
-    ImGui::GetStyle().GrabRounding = 0.0f;
-    ImGui::GetStyle().PopupRounding = 0.0f;
-    ImGui::GetStyle().ScrollbarRounding = 0.0f;
+    // Edit style
+    remove_rounds_and_spacing();
 
-    ImGui::GetStyle().ItemSpacing = ImVec2(0.f, 0.f);
-    ImGui::GetStyle().IndentSpacing = 0.f;
-    ImGui::GetStyle().WindowPadding = ImVec2(0.f, 0.f);
-
-    if (!globals::big_font)
-    {
-        ImGui::GetIO().Fonts->AddFontDefault();
-        globals::big_font = ImGui::GetIO().Fonts->AddFontFromFileTTF("C:\\USERS\\USER\\APPDATA\\LOCAL\\MICROSOFT\\WINDOWS\\FONTS\\ProggyClean.ttf", 26.0f);
-    }
+    // Big Font
+    load_fonts();
 
     // Main loop
     MSG msg;
@@ -97,22 +140,15 @@ int main(int, char**)
             continue;
         }
 
-        RECT rect;
-        if (GetWindowRect(hwnd, &rect))
-        {
-            globals::width = rect.right - rect.left;
-            globals::height = rect.bottom - rect.top;
-        }
-
-        globals::g_pd3dDevice = g_pd3dDevice;
-        globals::g_pD3D = g_pD3D;
-        globals::g_d3dpp = g_d3dpp;
+        // Set variables
+        set_globals(hwnd);
 
         // Start the Dear ImGui frame
         ImGui_ImplDX9_NewFrame();
         ImGui_ImplWin32_NewFrame();
         ImGui::NewFrame();
 
+        // Draw correct GUI
         if (!globals::intro_showed)
         {
             gui::draw_project_screen();
@@ -134,6 +170,7 @@ int main(int, char**)
             ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
             g_pd3dDevice->EndScene();
         }
+
         HRESULT result = g_pd3dDevice->Present(NULL, NULL, NULL, NULL);
 
         // Handle loss of D3D9 device
@@ -166,8 +203,7 @@ bool CreateDeviceD3D(HWND hWnd)
     g_d3dpp.BackBufferFormat = D3DFMT_UNKNOWN;
     g_d3dpp.EnableAutoDepthStencil = TRUE;
     g_d3dpp.AutoDepthStencilFormat = D3DFMT_D16;
-    g_d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_ONE;           // Present with vsync
-    //g_d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;   // Present without vsync, maximum unthrottled framerate
+    g_d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;   // Present without vsync, maximum unthrottled framerate
     if (g_pD3D->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &g_d3dpp, &g_pd3dDevice) < 0)
         return false;
 
